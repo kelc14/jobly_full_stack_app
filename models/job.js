@@ -34,7 +34,7 @@ class Job {
    * Returns [{ id, title, salary, equity, company_handle }, ...]
    * */
 
-  static async findAll() {
+  static async findAll(filters) {
     const jobsResults = await db.query(
       `SELECT id,
                 title,
