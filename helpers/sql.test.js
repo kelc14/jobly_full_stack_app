@@ -1,7 +1,12 @@
 const jwt = require("jsonwebtoken");
 const { createToken } = require("./tokens");
 const { SECRET_KEY } = require("../config");
-const { sqlForPartialUpdate, sqlForFiltering } = require("./sql");
+const {
+  sqlForPartialUpdate,
+  sqlForFiltering,
+  sqlForFilteringJobs,
+} = require("./sql");
+const { BadRequestError } = require("../expressError");
 
 describe("USER: create sql from js inputs", function () {
   // for all
@@ -39,7 +44,7 @@ describe("USER: create sql from js inputs", function () {
   });
 });
 
-describe("Test filter SQL strings", function () {
+describe("Test filter SQL strings for Companies", function () {
   test("no query string returns no statement or terms", function () {
     const result = sqlForFiltering({});
 
@@ -92,6 +97,64 @@ describe("Test filter SQL strings", function () {
     expect(result).toEqual({
       statement: "WHERE name ILIKE $1 AND num_employees BETWEEN 10 AND 500",
       terms: ["%at%"],
+    });
+  });
+});
+
+describe("Test filter SQL strings for Jobs", function () {
+  test("no query string returns no statement or terms", function () {
+    const result = sqlForFilteringJobs({});
+
+    expect(result).toEqual({
+      statement: "",
+      terms: [],
+    });
+  });
+
+  test("query string: ?title:engineer", function () {
+    const result = sqlForFilteringJobs({ title: "engineer" });
+
+    expect(result).toEqual({
+      statement: "WHERE title ILIKE $1",
+      terms: ["%engineer%"],
+    });
+  });
+
+  test("query string: ?minSalary:10000", function () {
+    const result = sqlForFilteringJobs({ minSalary: 10000 });
+    expect(result).toEqual({
+      statement: "WHERE salary > $1",
+      terms: [10000],
+    });
+  });
+
+  test("query string: ?title=engineer&minSalary:500", function () {
+    const result = sqlForFilteringJobs({ title: "engineer", minSalary: 500 });
+    expect(result).toEqual({
+      statement: "WHERE title ILIKE $1 AND salary > $2",
+      terms: ["%engineer%", 500],
+    });
+  });
+
+  test("query string: ?hasEquity=true", function () {
+    const result = sqlForFilteringJobs({
+      hasEquity: "true",
+    });
+    expect(result).toEqual({
+      statement: "WHERE equity > 0",
+      terms: [],
+    });
+  });
+
+  test("query string: ?title=engineer&minSalary=10000&hasEquity=true", function () {
+    const result = sqlForFilteringJobs({
+      title: "engineer",
+      minSalary: 10000,
+      hasEquity: "true",
+    });
+    expect(result).toEqual({
+      statement: "WHERE title ILIKE $1 AND salary > $2 AND equity > 0",
+      terms: ["%engineer%", 10000],
     });
   });
 });

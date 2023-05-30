@@ -31,7 +31,7 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   };
 }
 
-// *   Function that filters based on certain keys:
+// *   Function that filters COMPANIES based on certain keys:
 //
 //  ({key: var, key:var })
 //               => {statement: string,
@@ -46,11 +46,12 @@ function sqlForFiltering(filtersObj) {
   let terms = [];
 
   // if the filtering obj exists:
-  if (filtersObj) {
+  if (Object.keys(filtersObj).length !== 0) {
+    statements.push("WHERE");
     // ********* name is in query string:
     //
     if (filtersObj["name"]) {
-      let statement = `WHERE name ILIKE $1`;
+      let statement = `name ILIKE $1`;
       statements.push(statement);
       terms.push(`%${filtersObj["name"]}%`);
     }
@@ -64,29 +65,74 @@ function sqlForFiltering(filtersObj) {
       if (filtersObj["maxEmployees"] && !Number(filtersObj["maxEmployees"])) {
         throw new BadRequestError("Maxmimum employees must be a number", 400);
       }
+
       // if min or max employees is NOT a number or does not exist, set a default:
       // this should also protect against SQL injection ?
       let minEmployees = Number(filtersObj["minEmployees"]) || 0;
       let maxEmployees = Number(filtersObj["maxEmployees"]) || 999999;
 
+      if (statements.length > 1) statements.push("AND");
       // create a statement:
-      let statement;
-      if (filtersObj["name"]) {
-        // this will be the second part of the statement if we already created a NAME SELECT STATEMENT so we do not include WHERE
-        statement = `num_employees BETWEEN ${minEmployees} AND ${maxEmployees}`;
-      } else {
-        statement = `WHERE num_employees BETWEEN ${minEmployees} AND ${maxEmployees}`;
-      }
-      statements.push(statement);
+      statements.push(
+        `num_employees BETWEEN ${minEmployees} AND ${maxEmployees}`
+      );
     }
   }
-  // console.log("statement", statements);
-  // console.log("terms", terms);
 
   return {
-    statement: statements.join(" AND "),
+    statement: statements.join(" "),
     terms,
   };
 }
 
-module.exports = { sqlForPartialUpdate, sqlForFiltering };
+// *   Function that filters JOBS based on certain keys:
+//
+//  ({key: var, key:var })
+//               => {statement: string,
+//                   terms: []}
+//
+//  possible keys: title, minSalary, hasEquity
+//
+//
+
+function sqlForFilteringJobs(filtersObj) {
+  let statements = [];
+  let terms = [];
+
+  // if the filtering object exists
+  if (Object.keys(filtersObj).length !== 0) {
+    statements.push("WHERE");
+
+    // ********** title in filter query
+    if (filtersObj["title"]) {
+      statements.push(`title ILIKE $1`);
+      terms.push(`%${filtersObj["title"]}%`);
+    }
+    // ********** minSalary in filter query
+    if (filtersObj["minSalary"]) {
+      if (!Number(filtersObj["minSalary"])) {
+        throw new BadRequestError("minSalary must be a number");
+      }
+      if (statements.length > 1) statements.push("AND");
+      let idx = terms.length + 1;
+      statements.push(`salary > $${idx}`);
+      terms.push(Number(filtersObj["minSalary"]));
+    }
+    // ********** hasEquity in filter query
+    if (Object.keys(filtersObj).includes("hasEquity")) {
+      if (filtersObj["hasEquity"] === "true") {
+        if (statements.length > 1) statements.push("AND");
+        statements.push(`equity > 0`);
+      } else {
+        throw new BadRequestError("hasEquity must be set to true");
+      }
+    }
+  }
+
+  return {
+    statement: statements.join(" "),
+    terms,
+  };
+}
+
+module.exports = { sqlForPartialUpdate, sqlForFiltering, sqlForFilteringJobs };

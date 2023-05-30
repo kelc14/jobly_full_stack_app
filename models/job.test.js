@@ -55,8 +55,8 @@ describe("create", function () {
 // /************************************** findAll */
 
 describe("findAll", function () {
-  test("works", async function () {
-    let jobs = await Job.findAll();
+  test("works w/ out filters", async function () {
+    let jobs = await Job.findAll({});
     expect(jobs).toEqual([
       {
         id: expect.any(Number),
@@ -74,13 +74,80 @@ describe("findAll", function () {
       },
     ]);
   });
+
+  test("works: title filter", async function () {
+    let jobs = await Job.findAll({
+      title: "new job 1",
+    });
+    expect(jobs).toEqual([
+      {
+        id: expect.any(Number),
+        title: "new job 1",
+        salary: 100000,
+        equity: "0.01",
+        company_handle: "c1",
+      },
+    ]);
+  });
+
+  test("works: minSalary filter", async function () {
+    let jobs = await Job.findAll({
+      minSalary: 100000,
+    });
+    expect(jobs).toEqual([
+      {
+        id: expect.any(Number),
+        title: "new job 2",
+        salary: 200000,
+        equity: "0.02",
+        company_handle: "c2",
+      },
+    ]);
+  });
+  test("works: hasEquity filter", async function () {
+    let jobs = await Job.findAll({
+      hasEquity: "true",
+    });
+    expect(jobs).toEqual([
+      {
+        id: expect.any(Number),
+        title: "new job 1",
+        salary: 100000,
+        equity: "0.01",
+        company_handle: "c1",
+      },
+      {
+        id: expect.any(Number),
+        title: "new job 2",
+        salary: 200000,
+        equity: "0.02",
+        company_handle: "c2",
+      },
+    ]);
+  });
+  test("works: multiple filters", async function () {
+    let jobs = await Job.findAll({
+      title: "new",
+      minSalary: 100000,
+      hasEquity: "true",
+    });
+    expect(jobs).toEqual([
+      {
+        id: expect.any(Number),
+        title: "new job 2",
+        salary: 200000,
+        equity: "0.02",
+        company_handle: "c2",
+      },
+    ]);
+  });
 });
 
 // /************************************** get */
 
 describe("get", function () {
   test("works", async function () {
-    let jobs = await Job.findAll();
+    let jobs = await Job.findAll({});
     let jobId = jobs[0].id;
     let job = await Job.get(jobId);
     expect(job).toEqual({
@@ -112,7 +179,7 @@ describe("update", function () {
   };
 
   test("works", async function () {
-    let res = await Job.findAll();
+    let res = await Job.findAll({});
     let job1 = res[0];
     let job = await Job.update(job1.id, updateData);
     expect(job).toEqual({
@@ -144,7 +211,7 @@ describe("update", function () {
       equity: null,
     };
 
-    let res = await Job.findAll();
+    let res = await Job.findAll({});
     let job1 = res[0];
 
     let job = await Job.update(job1.id, updateDataSetNulls);
@@ -193,7 +260,7 @@ describe("update", function () {
 
 describe("remove", function () {
   test("works", async function () {
-    let result = await Job.findAll();
+    let result = await Job.findAll({});
     let job1 = result[0];
 
     await Job.remove(job1.id);
