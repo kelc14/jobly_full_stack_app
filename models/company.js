@@ -79,7 +79,7 @@ class Company {
                   logo_url AS "logoUrl",
                   json_agg(j.*) AS jobs
            FROM companies AS c
-           JOIN jobs AS j ON j.company_handle = c.handle
+           LEFT JOIN jobs AS j ON j.company_handle = c.handle
            WHERE handle = $1
            GROUP BY c.handle`,
       [handle]

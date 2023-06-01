@@ -117,23 +117,27 @@ class User {
   /** Given a username, return data about user.
    *
    * Returns { username, first_name, last_name, is_admin, jobs }
-   *   where jobs is { id, title, company_handle, company_name, state }
+   *   where jobs is { id } of jobs applied for
    *
    * Throws NotFoundError if user not found.
    **/
 
   static async get(username) {
     const userRes = await db.query(
-      `SELECT username,
+      `SELECT u.username,
                   first_name AS "firstName",
                   last_name AS "lastName",
                   email,
-                  is_admin AS "isAdmin"
-           FROM users
-           WHERE username = $1`,
+                  is_admin AS "isAdmin",
+                  json_agg(a.job_id) AS jobs
+           FROM users AS u
+           LEFT JOIN applications AS a 
+                  ON a.username = u.username
+           WHERE u.username = $1
+           GROUP BY u.username`,
       [username]
     );
-
+    console.log(userRes.rows[0], "userRes");
     const user = userRes.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
@@ -231,7 +235,6 @@ class User {
       [username, jobId]
     );
 
-    console.log(result.rows);
     const application = result.rows[0];
 
     return { applied: jobId };

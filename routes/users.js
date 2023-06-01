@@ -64,7 +64,7 @@ router.get("/", ensureAdmin, async function (req, res, next) {
 
 /** GET /[username] => { user }
  *
- * Returns { username, firstName, lastName, isAdmin }
+ * Returns { username, firstName, lastName, isAdmin, jobs: [jobId of applied jobs] }
  *
  * Authorization required: login - this user OR admin
  **/
@@ -130,5 +130,32 @@ router.delete("/:username", ensureSelfOrAdmin, async function (req, res, next) {
     return next(err);
   }
 });
+
+/** POST / [username, jobId]  => { applied: jobId }
+ *
+ * Apply to a job with id = jobId for
+ * user [username] or admin can apply for the user
+ *
+ *
+ * This returns t:
+ *  { applied: jobId }
+ *
+ * Authorization required:
+ *        login (user specific) - admin
+ **/
+
+router.post(
+  "/:username/jobs/:id",
+  ensureSelfOrAdmin,
+  async function (req, res, next) {
+    try {
+      const applied = await User.apply(req.params.username, req.params.id);
+
+      return res.status(201).json(applied);
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
 
 module.exports = router;

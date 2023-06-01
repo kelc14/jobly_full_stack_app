@@ -5,6 +5,7 @@ const request = require("supertest");
 const db = require("../db.js");
 const app = require("../app");
 const User = require("../models/user");
+const Job = require("../models/job.js");
 
 const {
   commonBeforeAll,
@@ -199,6 +200,7 @@ describe("GET /users/:username", function () {
         lastName: "U1L",
         email: "user1@user.com",
         isAdmin: false,
+        jobs: [null],
       },
     });
   });
@@ -213,6 +215,7 @@ describe("GET /users/:username", function () {
         lastName: "U1L",
         email: "user1@user.com",
         isAdmin: false,
+        jobs: [null],
       },
     });
   });
@@ -365,6 +368,57 @@ describe("DELETE /users/:username", function () {
   test("not found if user missing", async function () {
     const resp = await request(app)
       .delete(`/users/nope`)
+      .set("authorization", `Bearer ${u2Token}`);
+    expect(resp.statusCode).toEqual(404);
+  });
+});
+
+/************************************** POST /users/:username/jobs/:id */
+
+describe("POST /users/:username/jobs/:id", function () {
+  test("works for self users", async function () {
+    let job1 = await Job.findAll({ title: "Job1" });
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${job1[0].id}`)
+      .set("authorization", `Bearer ${u1Token}`);
+    expect(resp.body).toEqual({ applied: `${job1[0].id}` });
+  });
+
+  test("works for admin (non-self) users", async function () {
+    let job1 = await Job.findAll({ title: "Job1" });
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${job1[0].id}`)
+      .set("authorization", `Bearer ${u2Token}`);
+    expect(resp.body).toEqual({ applied: `${job1[0].id}` });
+  });
+
+  test("unauth for non-admin non-self users", async function () {
+    let job1 = await Job.findAll({ title: "Job1" });
+    const resp = await request(app)
+      .post(`/users/u1/jobs/${job1[0].id}`)
+      .set("authorization", `Bearer ${u3Token}`);
+    expect(resp.statusCode).toEqual(401);
+  });
+
+  test("unauth for anon", async function () {
+    let job1 = await Job.findAll({ title: "Job1" });
+
+    const resp = await request(app).post(`/users/u1/jobs/${job1[0].id}`);
+    expect(resp.statusCode).toEqual(401);
+  });
+
+  test("not found if user missing", async function () {
+    let job1 = await Job.findAll({ title: "Job1" });
+
+    const resp = await request(app)
+      .post(`/users/nope/jobs/${job1[0].id}`)
+      .set("authorization", `Bearer ${u2Token}`);
+    expect(resp.statusCode).toEqual(404);
+  });
+
+  test("not found if jobId missing", async function () {
+    const resp = await request(app)
+      .post(`/users/u1/jobs/0`)
       .set("authorization", `Bearer ${u2Token}`);
     expect(resp.statusCode).toEqual(404);
   });

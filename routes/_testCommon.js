@@ -67,7 +67,6 @@ async function commonBeforeAll() {
     equity: 0.01,
     company_handle: "c1",
   });
-  console.log("job1", job1);
 
   let job2 = await Job.create({
     title: "Job2",
