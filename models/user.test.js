@@ -214,14 +214,62 @@ describe("update", function () {
 describe("remove", function () {
   test("works", async function () {
     await User.remove("u1");
-    const res = await db.query(
-        "SELECT * FROM users WHERE username='u1'");
+    const res = await db.query("SELECT * FROM users WHERE username='u1'");
     expect(res.rows.length).toEqual(0);
   });
 
   test("not found if no such user", async function () {
     try {
       await User.remove("nope");
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+});
+
+/************************************** apply for a job */
+
+describe("apply for a job", function () {
+  test("works", async function () {
+    const jobRes = await db.query(
+      "SELECT * FROM jobs WHERE company_handle='c1'"
+    );
+    let job = jobRes.rows[0];
+    let jobApp = await User.apply("u1", job.id);
+    const res = await db.query(
+      "SELECT * FROM applications WHERE username='u1'"
+    );
+    expect(res.rows.length).toEqual(1);
+    expect(jobApp).toEqual({ applied: job.id });
+  });
+
+  test("not found if no such user or job", async function () {
+    try {
+      await User.apply("nope", 0);
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+
+  test("not found if no such user ", async function () {
+    try {
+      const jobRes = await db.query(
+        "SELECT * FROM jobs WHERE company_handle='c1'"
+      );
+      let job = jobRes.rows[0];
+
+      await User.apply("nope", job.id);
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+
+  test("not found if no such job", async function () {
+    try {
+      await User.apply("u1", 0);
       fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();

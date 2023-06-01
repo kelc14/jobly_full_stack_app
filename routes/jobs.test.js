@@ -104,111 +104,102 @@ describe("GET /jobs", function () {
     });
   });
 
-  //   test("filter companies name", async function () {
-  //     const resp = await request(app).get("/companies?name=c2");
-  //     expect(resp.body).toEqual({
-  //       companies: [
-  //         {
-  //           handle: "c2",
-  //           name: "C2",
-  //           description: "Desc2",
-  //           numEmployees: 2,
-  //           logoUrl: "http://c2.img",
-  //         },
-  //       ],
-  //     });
-  //   });
+  test("filter job title", async function () {
+    const resp = await request(app).get("/jobs?title=job");
+    expect(resp.body).toEqual({
+      jobs: [
+        {
+          id: expect.any(Number),
+          title: "Job1",
+          salary: 100000,
+          equity: "0.01",
+          company_handle: "c1",
+        },
+        {
+          id: expect.any(Number),
+          title: "Job2",
+          salary: 200000,
+          equity: "0.02",
+          company_handle: "c2",
+        },
+        {
+          id: expect.any(Number),
+          title: "Job3",
+          salary: 300000,
+          equity: "0.03",
+          company_handle: "c3",
+        },
+      ],
+    });
+  });
 
-  //   test("filter companies minEmployees", async function () {
-  //     const resp = await request(app).get("/companies?minEmployees=2");
-  //     expect(resp.body).toEqual({
-  //       companies: [
-  //         {
-  //           handle: "c2",
-  //           name: "C2",
-  //           description: "Desc2",
-  //           numEmployees: 2,
-  //           logoUrl: "http://c2.img",
-  //         },
-  //         {
-  //           handle: "c3",
-  //           name: "C3",
-  //           description: "Desc3",
-  //           numEmployees: 3,
-  //           logoUrl: "http://c3.img",
-  //         },
-  //       ],
-  //     });
-  //   });
-  //   test("filter companies maxEmployees", async function () {
-  //     const resp = await request(app).get("/companies?maxEmployees=2");
-  //     expect(resp.body).toEqual({
-  //       companies: [
-  //         {
-  //           handle: "c1",
-  //           name: "C1",
-  //           description: "Desc1",
-  //           numEmployees: 1,
-  //           logoUrl: "http://c1.img",
-  //         },
-  //         {
-  //           handle: "c2",
-  //           name: "C2",
-  //           description: "Desc2",
-  //           numEmployees: 2,
-  //           logoUrl: "http://c2.img",
-  //         },
-  //       ],
-  //     });
-  //   });
+  test("filter job minSalary", async function () {
+    const resp = await request(app).get("/jobs?minSalary=100000");
+    expect(resp.body).toEqual({
+      jobs: [
+        {
+          id: expect.any(Number),
+          title: "Job2",
+          salary: 200000,
+          equity: "0.02",
+          company_handle: "c2",
+        },
+        {
+          id: expect.any(Number),
+          title: "Job3",
+          salary: 300000,
+          equity: "0.03",
+          company_handle: "c3",
+        },
+      ],
+    });
+  });
 
-  //   test("filter companies name, min and maxEmployees", async function () {
-  //     const resp = await request(app).get(
-  //       "/companies?name=c&minEmployees=1&maxEmployees=2"
-  //     );
-  //     expect(resp.body).toEqual({
-  //       companies: [
-  //         {
-  //           handle: "c1",
-  //           name: "C1",
-  //           description: "Desc1",
-  //           numEmployees: 1,
-  //           logoUrl: "http://c1.img",
-  //         },
-  //         {
-  //           handle: "c2",
-  //           name: "C2",
-  //           description: "Desc2",
-  //           numEmployees: 2,
-  //           logoUrl: "http://c2.img",
-  //         },
-  //       ],
-  //     });
-  //   });
+  test("filter job hasEquity", async function () {
+    const resp = await request(app).get("/jobs?hasEquity=true");
+    expect(resp.body).toEqual({
+      jobs: [
+        {
+          id: expect.any(Number),
+          title: "Job1",
+          salary: 100000,
+          equity: "0.01",
+          company_handle: "c1",
+        },
+        {
+          id: expect.any(Number),
+          title: "Job2",
+          salary: 200000,
+          equity: "0.02",
+          company_handle: "c2",
+        },
+        {
+          id: expect.any(Number),
+          title: "Job3",
+          salary: 300000,
+          equity: "0.03",
+          company_handle: "c3",
+        },
+      ],
+    });
+  });
 
-  //   test("order does not matter: filter companies name, min and maxEmployees", async function () {
-  //     const resp = await request(app).get(
-  //       "/companies?minEmployees=1&name=c&maxEmployees=2"
-  //     );
-  //     expect(resp.body).toEqual({
-  //       companies: [
-  //         {
-  //           handle: "c1",
-  //           name: "C1",
-  //           description: "Desc1",
-  //           numEmployees: 1,
-  //           logoUrl: "http://c1.img",
-  //         },
-  //         {
-  //           handle: "c2",
-  //           name: "C2",
-  //           description: "Desc2",
-  //           numEmployees: 2,
-  //           logoUrl: "http://c2.img",
-  //         },
-  //       ],
-  //     });
-  //   });
+  test("filter job all three", async function () {
+    const resp = await request(app).get(
+      "/jobs?title=job&minSalary=200000&hasEquity=true"
+    );
+    expect(resp.body).toEqual({
+      jobs: [
+        {
+          id: expect.any(Number),
+          title: "Job3",
+          salary: 300000,
+          equity: "0.03",
+          company_handle: "c3",
+        },
+      ],
+    });
+  });
 
   test("fails: test next() handler", async function () {
     // there's no normal failure event which will cause this route to fail ---
@@ -226,7 +217,7 @@ describe("GET /jobs", function () {
 
 describe("GET /jobs/:id", function () {
   test("works for anon", async function () {
-    let job1 = await Job.findAll();
+    let job1 = await Job.findAll({});
     let job = job1[0];
 
     const resp = await request(app).get(`/jobs/${job.id}`);
@@ -251,7 +242,7 @@ describe("GET /jobs/:id", function () {
 
 describe("PATCH /jobs/:id", function () {
   test("work for admin users", async function () {
-    let job1 = await Job.findAll();
+    let job1 = await Job.findAll({});
     let job = job1[0];
     const resp = await request(app)
       .patch(`/jobs/${job.id}`)
@@ -271,7 +262,7 @@ describe("PATCH /jobs/:id", function () {
   });
 
   test("does not work for non-admin users", async function () {
-    let job1 = await Job.findAll();
+    let job1 = await Job.findAll({});
     let job = job1[0];
     const resp = await request(app)
       .patch(`/jobs/${job.id}`)
@@ -283,7 +274,7 @@ describe("PATCH /jobs/:id", function () {
   });
 
   test("unauth for anon", async function () {
-    let job1 = await Job.findAll();
+    let job1 = await Job.findAll({});
     let job = job1[0];
     const resp = await request(app).patch(`/jobs/${job.id}`).send({
       title: "Job-new",
@@ -303,7 +294,7 @@ describe("PATCH /jobs/:id", function () {
   });
 
   test("bad request on handle change attempt", async function () {
-    let job1 = await Job.findAll();
+    let job1 = await Job.findAll({});
     let job = job1[0];
     const resp = await request(app)
       .patch(`/jobs/${job.id}`)
@@ -315,7 +306,7 @@ describe("PATCH /jobs/:id", function () {
   });
 
   test("bad request on invalid data", async function () {
-    let job1 = await Job.findAll();
+    let job1 = await Job.findAll({});
     let job = job1[0];
     const resp = await request(app)
       .patch(`/jobs/${job.id}`)
@@ -331,7 +322,7 @@ describe("PATCH /jobs/:id", function () {
 
 describe("DELETE /jobs/:id", function () {
   test("works for admin users", async function () {
-    let job1 = await Job.findAll();
+    let job1 = await Job.findAll({});
     let job = job1[0];
     const resp = await request(app)
       .delete(`/jobs/${job.id}`)
@@ -340,7 +331,7 @@ describe("DELETE /jobs/:id", function () {
   });
 
   test("does not work for non-admin users", async function () {
-    let job1 = await Job.findAll();
+    let job1 = await Job.findAll({});
     let job = job1[0];
     const resp = await request(app)
       .delete(`/jobs/${job.id}`)
@@ -349,7 +340,7 @@ describe("DELETE /jobs/:id", function () {
   });
 
   test("unauth for anon", async function () {
-    let job1 = await Job.findAll();
+    let job1 = await Job.findAll({});
     let job = job1[0];
     const resp = await request(app).delete(`/jobs/${job.id}`);
     expect(resp.statusCode).toEqual(401);

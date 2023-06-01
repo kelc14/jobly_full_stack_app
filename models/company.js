@@ -76,9 +76,12 @@ class Company {
                   name,
                   description,
                   num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           WHERE handle = $1`,
+                  logo_url AS "logoUrl",
+                  json_agg(j.*) AS jobs
+           FROM companies AS c
+           JOIN jobs AS j ON j.company_handle = c.handle
+           WHERE handle = $1
+           GROUP BY c.handle`,
       [handle]
     );
 
