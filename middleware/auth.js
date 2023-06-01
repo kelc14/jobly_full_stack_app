@@ -57,6 +57,12 @@ function ensureAdmin(req, res, next) {
   }
 }
 
+/** Middleware to use when the logged in user must be an either admin or the user from designated route
+ * (ex. gathering their own user data)
+ *
+ * If not, raises Unauthorized.
+ */
+
 function ensureSelfOrAdmin(req, res, next) {
   try {
     if (!res.locals.user) throw new UnauthorizedError();

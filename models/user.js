@@ -209,7 +209,7 @@ class User {
   /** Apply for a job for the given user */
 
   static async apply(username, jobId) {
-    // check for user
+    // check for that user exists, otherwise throw error
     const resultUser = await db.query("SELECT * FROM users WHERE username=$1", [
       username,
     ]);
@@ -217,14 +217,14 @@ class User {
     if (!user)
       throw new NotFoundError(`No user found with username: ${username}`);
 
-    // check for jobId
+    // check for jobId that exists, otherwise throw error
     const resultJobId = await db.query("SELECT * FROM jobs WHERE id=$1", [
       jobId,
     ]);
     let job = resultJobId.rows[0];
     if (!job) throw new NotFoundError(`No job found with ID: ${jobId}`);
 
-    // if both exist:
+    // if both exist, apply for the job by creating new table entry with username, job_id
     const result = await db.query(
       `INSERT INTO applications
            (username,
@@ -235,7 +235,7 @@ class User {
       [username, jobId]
     );
 
-    const application = result.rows[0];
+    // const application = result.rows[0];
 
     return { applied: jobId };
   }

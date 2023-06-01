@@ -48,6 +48,7 @@ function sqlForFiltering(filtersObj) {
   // if the filtering obj exists:
   if (Object.keys(filtersObj).length !== 0) {
     statements.push("WHERE");
+
     // ********* name is in query string:
     //
     if (filtersObj["name"]) {
