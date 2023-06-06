@@ -16,6 +16,9 @@ const router = new express.Router();
 
 /** POST / { company } =>  { company }
  *
+ * Middleware: ensureLoggedIn
+ *        -> make sure that user is logged in
+ *
  * company should be { handle, name, description, numEmployees, logoUrl }
  *
  * Returns { handle, name, description, numEmployees, logoUrl }
@@ -40,6 +43,7 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 
 /** GET /  =>
  *   { companies: [ { handle, name, description, numEmployees, logoUrl }, ...] }
+ *
  *
  * Can filter on provided search filters:
  * - minEmployees
@@ -83,6 +87,11 @@ router.get("/:handle", async function (req, res, next) {
 
 /** PATCH /[handle] { fld1, fld2, ... } => { company }
  *
+ * *
+ * Middleware: ensureAdmin
+ *        -> make sure that user is an ADMIN
+ *
+ *
  * Patches company data.
  *
  * fields can be: { name, description, numEmployees, logo_url }
@@ -95,6 +104,7 @@ router.get("/:handle", async function (req, res, next) {
 router.patch("/:handle", ensureAdmin, async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, companyUpdateSchema);
+
     if (!validator.valid) {
       const errs = validator.errors.map((e) => e.stack);
       throw new BadRequestError(errs);
@@ -108,6 +118,10 @@ router.patch("/:handle", ensureAdmin, async function (req, res, next) {
 });
 
 /** DELETE /[handle]  =>  { deleted: handle }
+ *
+ * * Middleware: ensureAdmin
+ *        -> make sure that user is an ADMIN
+ *
  *
  * Authorization: login - admin
  */
